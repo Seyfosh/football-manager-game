@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
-function LobbyScreen() {
+interface LobbyScreenProps {
+  onCreateGame: (name: string) => void
+}
+
+function LobbyScreen({ onCreateGame }: LobbyScreenProps) {
   const [playerName, setPlayerName] = useState('')
   const [gameCode, setGameCode] = useState('')
 
@@ -33,8 +37,9 @@ function LobbyScreen() {
         {/* Buttons */}
         <div className="flex flex-col gap-4">
           <button
-            className="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-4 rounded-lg text-lg transition-colors"
-            onClick={() => alert(`Creating game for ${playerName}...`)}
+            className="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-4 rounded-lg text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => onCreateGame(playerName)}
+            disabled={!playerName.trim()}
           >
             🏆 Create New Game
           </button>
@@ -45,7 +50,7 @@ function LobbyScreen() {
               value={gameCode}
               onChange={(e) => setGameCode(e.target.value)}
               placeholder="Game code..."
-              className="w-full bg-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <button
               className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-6 rounded-lg transition-colors"
