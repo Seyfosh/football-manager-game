@@ -3,6 +3,7 @@ import LobbyScreen from './pages/LobbyScreen'
 import DraftScreen from './pages/DraftScreen'
 import SquadScreen from './pages/SquadScreen'
 import TransferMarketScreen from './pages/TransferMarketScreen'
+import MatchScreen from './pages/MatchScreen'
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -76,11 +77,28 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Feyenoord': 55000000,
 }
 
+const TEAM_OVRS: Record<string, number> = {
+  'Manchester City': 89,
+  'Arsenal': 86,
+  'Real Madrid': 91,
+  'Barcelona': 87,
+  'Inter Milan': 86,
+  'AC Milan': 84,
+  'Bayern Munich': 88,
+  'Borussia Dortmund': 82,
+  'PSG': 87,
+  'Benfica': 80,
+  'Porto': 81,
+  'PSV': 82,
+  'Feyenoord': 79,
+}
+
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'match'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [mySquad, setMySquad] = useState<any[]>([])
+  const [draftSelections, setDraftSelections] = useState<Record<string, string>>({})
 
   const handleCreateGame = (name: string) => {
     setPlayerName(name)
@@ -88,6 +106,7 @@ function App() {
   }
 
   const handleDraftComplete = (selections: Record<string, string>) => {
+    setDraftSelections(selections)
     const myTeam = selections[playerName]
     setSelectedTeam(myTeam)
     const squad = TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)
@@ -99,9 +118,15 @@ function App() {
     setScreen('transfer')
   }
 
-  const handlePurchase = (player: any, price: number) => {
+  const handlePurchase = (player: any) => {
     const newPlayer = { ...player, fitness: 85, morale: 'High', status: 'Healthy' }
-    setMySquad([...mySquad, newPlayer])
+    setMySquad(prev => [...prev, newPlayer])
+  }
+
+  const getOpponent = () => {
+    const allTeams = Object.values(draftSelections)
+    const opponents = allTeams.filter(t => t !== selectedTeam)
+    return opponents[0] || 'Real Madrid'
   }
 
   return (
@@ -127,8 +152,19 @@ function App() {
           budget={TEAM_BUDGETS[selectedTeam] || 80000000}
           myTeam={selectedTeam}
           onPurchase={handlePurchase}
-          onContinue={() => alert('Transfer window closed! Season starting...')}
+          onContinue={() => setScreen('match')}
           timeLeft={600}
+        />
+      )}
+      {screen === 'match' && (
+        <MatchScreen
+          homeTeam={selectedTeam}
+          awayTeam={getOpponent()}
+          homeOvr={TEAM_OVRS[selectedTeam] || 82}
+          awayOvr={TEAM_OVRS[getOpponent()] || 82}
+          onMatchComplete={(result) => {
+            alert(`Full Time! ${selectedTeam} ${result.homeScore} - ${result.awayScore} ${getOpponent()}`)
+          }}
         />
       )}
     </div>
