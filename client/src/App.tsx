@@ -2,6 +2,7 @@ import { useState } from 'react'
 import LobbyScreen from './pages/LobbyScreen'
 import DraftScreen from './pages/DraftScreen'
 import SquadScreen from './pages/SquadScreen'
+import TransferMarketScreen from './pages/TransferMarketScreen'
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -45,7 +46,6 @@ const TEAM_PLAYERS: Record<string, any[]> = {
   ],
 }
 
-// Default squad for teams not yet fully defined
 const getDefaultSquad = (teamName: string) => [
   { id: 201, name: 'Player GK', club: teamName, position: 'GK', age: 28, ovr: 80, pace: 52, shooting: 25, passing: 68, dribbling: 35, defending: 82, physical: 74, fitness: 90, morale: 'High', status: 'Healthy' },
   { id: 202, name: 'Player RB', club: teamName, position: 'RB', age: 26, ovr: 78, pace: 78, shooting: 55, passing: 70, dribbling: 68, defending: 78, physical: 74, fitness: 88, morale: 'High', status: 'Healthy' },
@@ -60,10 +60,27 @@ const getDefaultSquad = (teamName: string) => [
   { id: 211, name: 'Player ST', club: teamName, position: 'ST', age: 27, ovr: 81, pace: 80, shooting: 82, passing: 66, dribbling: 76, defending: 40, physical: 78, fitness: 92, morale: 'High', status: 'Healthy' },
 ]
 
+const TEAM_BUDGETS: Record<string, number> = {
+  'Manchester City': 150000000,
+  'Arsenal': 120000000,
+  'Real Madrid': 200000000,
+  'Barcelona': 130000000,
+  'Inter Milan': 100000000,
+  'AC Milan': 95000000,
+  'Bayern Munich': 140000000,
+  'Borussia Dortmund': 80000000,
+  'PSG': 180000000,
+  'Benfica': 60000000,
+  'Porto': 65000000,
+  'PSV': 70000000,
+  'Feyenoord': 55000000,
+}
+
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
+  const [mySquad, setMySquad] = useState<any[]>([])
 
   const handleCreateGame = (name: string) => {
     setPlayerName(name)
@@ -73,11 +90,18 @@ function App() {
   const handleDraftComplete = (selections: Record<string, string>) => {
     const myTeam = selections[playerName]
     setSelectedTeam(myTeam)
+    const squad = TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)
+    setMySquad(squad)
     setScreen('squad')
   }
 
-  const getSquad = (teamName: string) => {
-    return TEAM_PLAYERS[teamName] || getDefaultSquad(teamName)
+  const handleSquadConfirmed = () => {
+    setScreen('transfer')
+  }
+
+  const handlePurchase = (player: any, price: number) => {
+    const newPlayer = { ...player, fitness: 85, morale: 'High', status: 'Healthy' }
+    setMySquad([...mySquad, newPlayer])
   }
 
   return (
@@ -94,8 +118,17 @@ function App() {
       {screen === 'squad' && (
         <SquadScreen
           teamName={selectedTeam}
-          players={getSquad(selectedTeam)}
-          onContinue={() => alert('Season starting soon!')}
+          players={mySquad}
+          onContinue={handleSquadConfirmed}
+        />
+      )}
+      {screen === 'transfer' && (
+        <TransferMarketScreen
+          budget={TEAM_BUDGETS[selectedTeam] || 80000000}
+          myTeam={selectedTeam}
+          onPurchase={handlePurchase}
+          onContinue={() => alert('Transfer window closed! Season starting...')}
+          timeLeft={600}
         />
       )}
     </div>
