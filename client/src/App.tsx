@@ -5,6 +5,8 @@ import SquadScreen from './pages/SquadScreen'
 import TransferMarketScreen from './pages/TransferMarketScreen'
 import MatchScreen from './pages/MatchScreen'
 import LeagueScreen from './pages/LeagueScreen'
+import EndOfSeasonScreen from './pages/EndOfSeasonScreen'
+
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -95,7 +97,7 @@ const TEAM_OVRS: Record<string, number> = {
 }
 
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [mySquad, setMySquad] = useState<any[]>([])
@@ -103,6 +105,10 @@ function App() {
   const [allTeams, setAllTeams] = useState<string[]>([])
   const [currentMatch, setCurrentMatch] = useState<{ home: string, away: string } | null>(null)
   const [leagueResults, setLeagueResults] = useState<any[]>([])
+  const [seasonComplete, setSeasonComplete] = useState(false)
+
+
+
 
   const handleCreateGame = (name: string) => {
     setPlayerName(name)
@@ -202,7 +208,8 @@ function App() {
           playerTeam={selectedTeam}
           results={leagueResults}
           onPlayNextMatch={handlePlayNextMatch}
-          onViewComplete={() => alert('🏆 Season Complete! Thanks for playing!')}
+          onViewComplete={() => setScreen('endofseason')}
+
         />
       )}
       {screen === 'match' && currentMatch && (
@@ -212,6 +219,30 @@ function App() {
           homeOvr={TEAM_OVRS[currentMatch.home] || 82}
           awayOvr={TEAM_OVRS[currentMatch.away] || 82}
           onMatchComplete={handleMatchComplete}
+        />
+      )}
+      {screen === 'endofseason' && (
+        <EndOfSeasonScreen
+          standings={allTeams.map(name => {
+            const homeGames = leagueResults.filter(r => r.homeTeam === name)
+            const awayGames = leagueResults.filter(r => r.awayTeam === name)
+            let won = 0, drawn = 0, lost = 0, goalsFor = 0, goalsAgainst = 0
+            homeGames.forEach(r => {
+              goalsFor += r.homeScore; goalsAgainst += r.awayScore
+              if (r.homeScore > r.awayScore) won++
+              else if (r.homeScore === r.awayScore) drawn++
+              else lost++
+            })
+            awayGames.forEach(r => {
+              goalsFor += r.awayScore; goalsAgainst += r.homeScore
+              if (r.awayScore > r.homeScore) won++
+              else if (r.awayScore === r.homeScore) drawn++
+              else lost++
+            })
+            return { name, played: homeGames.length + awayGames.length, won, drawn, lost, goalsFor, goalsAgainst, points: won * 3 + drawn }
+          })}
+          playerTeam={selectedTeam}
+          onPlayAgain={() => window.location.reload()}
         />
       )}
     </div>
