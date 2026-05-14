@@ -4,6 +4,7 @@ import DraftScreen from './pages/DraftScreen'
 import SquadScreen from './pages/SquadScreen'
 import TransferMarketScreen from './pages/TransferMarketScreen'
 import MatchScreen from './pages/MatchScreen'
+import LeagueScreen from './pages/LeagueScreen'
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -94,11 +95,14 @@ const TEAM_OVRS: Record<string, number> = {
 }
 
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'match'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [mySquad, setMySquad] = useState<any[]>([])
   const [draftSelections, setDraftSelections] = useState<Record<string, string>>({})
+  const [allTeams, setAllTeams] = useState<string[]>([])
+  const [currentMatch, setCurrentMatch] = useState<{ home: string, away: string } | null>(null)
+  const [leagueResults, setLeagueResults] = useState<any[]>([])
 
   const handleCreateGame = (name: string) => {
     setPlayerName(name)
@@ -109,6 +113,8 @@ function App() {
     setDraftSelections(selections)
     const myTeam = selections[playerName]
     setSelectedTeam(myTeam)
+    const teams = Object.values(selections)
+    setAllTeams(teams)
     const squad = TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)
     setMySquad(squad)
     setScreen('squad')
@@ -123,10 +129,44 @@ function App() {
     setMySquad(prev => [...prev, newPlayer])
   }
 
-  const getOpponent = () => {
-    const allTeams = Object.values(draftSelections)
-    const opponents = allTeams.filter(t => t !== selectedTeam)
-    return opponents[0] || 'Real Madrid'
+  const handleTransferComplete = () => {
+    setScreen('league')
+  }
+
+  const handlePlayNextMatch = () => {
+    // Find next unplayed fixture
+    const fixtures = generateFixtures(allTeams)
+    const playedKeys = leagueResults.map(r => `${r.homeTeam}-${r.awayTeam}`)
+    const nextFixture = fixtures.find(f => !playedKeys.includes(`${f.home}-${f.away}`))
+    if (nextFixture) {
+      setCurrentMatch(nextFixture)
+      setScreen('match')
+    }
+  }
+
+  const generateFixtures = (teams: string[]) => {
+    const fixtures: { home: string, away: string }[] = []
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        fixtures.push({ home: teams[i], away: teams[j] })
+        fixtures.push({ home: teams[j], away: teams[i] })
+      }
+    }
+    return fixtures
+  }
+
+  const handleMatchComplete = (result: any) => {
+    if (currentMatch) {
+      const newResult = {
+        homeTeam: currentMatch.home,
+        awayTeam: currentMatch.away,
+        homeScore: result.homeScore,
+        awayScore: result.awayScore,
+        played: true
+      }
+      setLeagueResults(prev => [...prev, newResult])
+    }
+    setScreen('league')
   }
 
   return (
@@ -152,19 +192,26 @@ function App() {
           budget={TEAM_BUDGETS[selectedTeam] || 80000000}
           myTeam={selectedTeam}
           onPurchase={handlePurchase}
-          onContinue={() => setScreen('match')}
+          onContinue={handleTransferComplete}
           timeLeft={600}
         />
       )}
-      {screen === 'match' && (
+      {screen === 'league' && (
+        <LeagueScreen
+          teams={allTeams}
+          playerTeam={selectedTeam}
+          results={leagueResults}
+          onPlayNextMatch={handlePlayNextMatch}
+          onViewComplete={() => alert('🏆 Season Complete! Thanks for playing!')}
+        />
+      )}
+      {screen === 'match' && currentMatch && (
         <MatchScreen
-          homeTeam={selectedTeam}
-          awayTeam={getOpponent()}
-          homeOvr={TEAM_OVRS[selectedTeam] || 82}
-          awayOvr={TEAM_OVRS[getOpponent()] || 82}
-          onMatchComplete={(result) => {
-            alert(`Full Time! ${selectedTeam} ${result.homeScore} - ${result.awayScore} ${getOpponent()}`)
-          }}
+          homeTeam={currentMatch.home}
+          awayTeam={currentMatch.away}
+          homeOvr={TEAM_OVRS[currentMatch.home] || 82}
+          awayOvr={TEAM_OVRS[currentMatch.away] || 82}
+          onMatchComplete={handleMatchComplete}
         />
       )}
     </div>
