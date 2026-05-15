@@ -30,11 +30,12 @@ interface MatchScreenProps {
   awayTeam: string
   homeOvr: number
   awayOvr: number
+  homePlayers: { name: string, position: string, ovr: number }[]
+  awayPlayers: { name: string, position: string, ovr: number }[]
   onMatchComplete: (result: MatchResult) => void
 }
 
-function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, onMatchComplete }: MatchScreenProps) {
-  const [socket, setSocket] = useState<Socket | null>(null)
+function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPlayers, onMatchComplete }: MatchScreenProps) {  const [socket, setSocket] = useState<Socket | null>(null)
   const [displayedEvents, setDisplayedEvents] = useState<MatchEvent[]>([])
   const [currentMinute, setCurrentMinute] = useState(0)
   const [homeScore, setHomeScore] = useState(0)
@@ -90,7 +91,8 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, onMatchComplete }: 
         midfield: homeOvr,
         defense: Math.round(homeOvr * 0.95),
         gkRating: Math.round(homeOvr * 0.9),
-        mentality: 'balanced'
+        mentality: 'balanced',
+        players: homePlayers
       },
       away: {
         name: awayTeam,
@@ -99,7 +101,8 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, onMatchComplete }: 
         midfield: awayOvr,
         defense: Math.round(awayOvr * 0.95),
         gkRating: Math.round(awayOvr * 0.9),
-        mentality: 'balanced'
+        mentality: 'balanced',
+        players: awayPlayers
       }
     })
   }

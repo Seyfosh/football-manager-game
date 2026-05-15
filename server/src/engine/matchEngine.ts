@@ -6,6 +6,7 @@ export interface MatchTeam {
   defense: number
   gkRating: number
   mentality: 'defensive' | 'balanced' | 'attacking'
+  players?: { name: string, position: string, ovr: number }[]
 }
 
 export interface MatchEvent {
@@ -33,15 +34,31 @@ export interface MatchState {
   awayStats: MatchStats
 }
 
-const HOME_PLAYERS = ['Striker', 'Left Winger', 'Right Winger', 'Midfielder', 'Captain']
-const AWAY_PLAYERS = ['Their Forward', 'Their Attacker', 'Their Playmaker', 'Their Winger', 'Their Midfielder']
+const DEFAULT_HOME_PLAYERS = ['Striker', 'Left Winger', 'Right Winger', 'Midfielder', 'Captain']
+const DEFAULT_AWAY_PLAYERS = ['Their Forward', 'Their Attacker', 'Their Playmaker', 'Their Winger', 'Their Midfielder']
 
 function weightedRandom(probability: number): boolean {
   return Math.random() < probability
 }
 
-function randomPlayer(players: string[]): string {
-  return players[Math.floor(Math.random() * players.length)]
+function getAttacker(team: MatchTeam, defaults: string[]): string {
+  if (team.players && team.players.length > 0) {
+    const attackers = team.players.filter(p =>
+      ['ST', 'LW', 'RW', 'CAM'].includes(p.position)
+    )
+    if (attackers.length > 0) {
+      return attackers[Math.floor(Math.random() * attackers.length)].name
+    }
+    return team.players[Math.floor(Math.random() * team.players.length)].name
+  }
+  return defaults[Math.floor(Math.random() * defaults.length)]
+}
+
+function getAnyPlayer(team: MatchTeam, defaults: string[]): string {
+  if (team.players && team.players.length > 0) {
+    return team.players[Math.floor(Math.random() * team.players.length)].name
+  }
+  return defaults[Math.floor(Math.random() * defaults.length)]
 }
 
 export function simulateMinute(
@@ -66,13 +83,13 @@ export function simulateMinute(
       const conversionRate = home.attack / (home.attack + away.gkRating)
       if (weightedRandom(conversionRate * 0.35)) {
         newState.homeScore++
-        const scorer = randomPlayer(HOME_PLAYERS)
+        const scorer = getAttacker(home, DEFAULT_HOME_PLAYERS)
         events.push({
           minute: state.minute,
           type: 'goal',
           team: 'home',
           playerName: scorer,
-          description: `⚽ GOAL! ${home.name} score! ${scorer} finds the net! ${newState.homeScore}-${newState.awayScore}`
+          description: `⚽ GOAL! ${scorer} scores for ${home.name}! ${newState.homeScore}-${newState.awayScore}`
         })
       }
     }
@@ -86,13 +103,13 @@ export function simulateMinute(
       const conversionRate = away.attack / (away.attack + home.gkRating)
       if (weightedRandom(conversionRate * 0.35)) {
         newState.awayScore++
-        const scorer = randomPlayer(AWAY_PLAYERS)
+        const scorer = getAttacker(away, DEFAULT_AWAY_PLAYERS)
         events.push({
           minute: state.minute,
           type: 'goal',
           team: 'away',
           playerName: scorer,
-          description: `⚽ GOAL! ${away.name} score! ${scorer} finds the net! ${newState.homeScore}-${newState.awayScore}`
+          description: `⚽ GOAL! ${scorer} scores for ${away.name}! ${newState.homeScore}-${newState.awayScore}`
         })
       }
     }
@@ -103,14 +120,15 @@ export function simulateMinute(
     const isHome = weightedRandom(0.5)
     const team = isHome ? home : away
     const stats = isHome ? newState.homeStats : newState.awayStats
+    const player = getAnyPlayer(isHome ? home : away, isHome ? DEFAULT_HOME_PLAYERS : DEFAULT_AWAY_PLAYERS)
     stats.yellowCards++
     stats.fouls++
     events.push({
       minute: state.minute,
       type: 'yellow_card',
       team: isHome ? 'home' : 'away',
-      playerName: randomPlayer(isHome ? HOME_PLAYERS : AWAY_PLAYERS),
-      description: `🟡 Yellow card for ${team.name}`
+      playerName: player,
+      description: `🟡 Yellow card for ${player} (${team.name})`
     })
   }
 
@@ -119,13 +137,14 @@ export function simulateMinute(
     const isHome = weightedRandom(0.5)
     const team = isHome ? home : away
     const stats = isHome ? newState.homeStats : newState.awayStats
+    const player = getAnyPlayer(isHome ? home : away, isHome ? DEFAULT_HOME_PLAYERS : DEFAULT_AWAY_PLAYERS)
     stats.redCards++
     events.push({
       minute: state.minute,
       type: 'red_card',
       team: isHome ? 'home' : 'away',
-      playerName: randomPlayer(isHome ? HOME_PLAYERS : AWAY_PLAYERS),
-      description: `🔴 RED CARD! ${team.name} are down to 10 men!`
+      playerName: player,
+      description: `🔴 RED CARD! ${player} is sent off! ${team.name} down to 10 men!`
     })
   }
 
@@ -133,12 +152,13 @@ export function simulateMinute(
   if (weightedRandom(0.008)) {
     const isHome = weightedRandom(0.5)
     const team = isHome ? home : away
+    const player = getAnyPlayer(isHome ? home : away, isHome ? DEFAULT_HOME_PLAYERS : DEFAULT_AWAY_PLAYERS)
     events.push({
       minute: state.minute,
       type: 'injury',
       team: isHome ? 'home' : 'away',
-      playerName: randomPlayer(isHome ? HOME_PLAYERS : AWAY_PLAYERS),
-      description: `🚑 Injury concern for ${team.name} — substitution needed`
+      playerName: player,
+      description: `🚑 ${player} is injured and needs to come off for ${team.name}`
     })
   }
 
