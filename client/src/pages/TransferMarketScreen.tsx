@@ -22,6 +22,7 @@ interface TransferMarketProps {
   onPurchase: (player: Player, price: number) => void
   onContinue: () => void
   timeLeft: number
+  isMidSeason?: boolean
 }
 
 const MARKET_PLAYERS: Player[] = [
@@ -53,8 +54,7 @@ const getOvrColor = (ovr: number) => {
   return 'text-orange-400'
 }
 
-function TransferMarketScreen({ budget, myTeam, onPurchase, onContinue, timeLeft }: TransferMarketProps) {
-  const [searchQuery, setSearchQuery] = useState('')
+function TransferMarketScreen({ budget, myTeam, onPurchase, onContinue, timeLeft, isMidSeason }: TransferMarketProps) {  const [searchQuery, setSearchQuery] = useState('')
   const [positionFilter, setPositionFilter] = useState('ALL')
   const [purchasedIds, setPurchasedIds] = useState<number[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
@@ -92,8 +92,7 @@ function TransferMarketScreen({ budget, myTeam, onPurchase, onContinue, timeLeft
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-green-400">Transfer Market</h1>
-          <p className="text-gray-400">Summer Window • {myTeam}</p>
-        </div>
+<p className="text-gray-400">{isMidSeason ? 'January Window' : 'Summer Window'} • {myTeam}</p>        </div>
         <div className="flex gap-6 items-center">
           <div className="text-center">
             <div className="text-xs text-gray-400">Budget</div>

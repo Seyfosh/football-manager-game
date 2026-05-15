@@ -227,7 +227,7 @@ const TEAM_OVRS: Record<string, number> = {
 }
 
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason' | 'midtransfer'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [mySquad, setMySquad] = useState<any[]>([])
@@ -236,7 +236,7 @@ function App() {
   const [currentMatch, setCurrentMatch] = useState<{ home: string, away: string } | null>(null)
   const [leagueResults, setLeagueResults] = useState<any[]>([])
   const [seasonComplete, setSeasonComplete] = useState(false)
-
+  const [midSeasonWindowUsed, setMidSeasonWindowUsed] = useState(false)
 
 
 
@@ -307,15 +307,25 @@ function App() {
         awayScore: result.awayScore,
         played: true
       }
-      setLeagueResults(prev => [...prev, newResult])
 
-      // Drop fitness for players who played, recover others
+      const updatedResults = [...leagueResults, newResult]
+      setLeagueResults(updatedResults)
+
+      // Drop fitness for players who played
       if (currentMatch.home === selectedTeam || currentMatch.away === selectedTeam) {
         setMySquad(prev => prev.map(player => {
-          const fitnessChange = Math.random() * 15 + 10 // lose 10-25% fitness
+          const fitnessChange = Math.random() * 15 + 10
           const newFitness = Math.max(40, player.fitness - fitnessChange)
           return { ...player, fitness: Math.round(newFitness) }
         }))
+      }
+
+      // Check if mid-season transfer window should open
+      const totalFixtures = generateFixtures(allTeams).length
+      const halfwayPoint = Math.floor(totalFixtures / 2)
+      if (updatedResults.length === halfwayPoint && !midSeasonWindowUsed) {
+        setScreen('midtransfer')
+        return
       }
     }
     setScreen('league')
@@ -368,6 +378,19 @@ function App() {
           homePlayers={(TEAM_PLAYERS[currentMatch.home] || getDefaultSquad(currentMatch.home)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
           awayPlayers={(TEAM_PLAYERS[currentMatch.away] || getDefaultSquad(currentMatch.away)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
           onMatchComplete={handleMatchComplete}
+        />
+      )}
+      {screen === 'midtransfer' && (
+        <TransferMarketScreen
+          budget={TEAM_BUDGETS[selectedTeam] || 80000000}
+          myTeam={selectedTeam}
+          onPurchase={handlePurchase}
+          onContinue={() => {
+            setMidSeasonWindowUsed(true)
+            setScreen('league')
+          }}
+          timeLeft={300}
+          isMidSeason={true}
         />
       )}
       {screen === 'endofseason' && (
