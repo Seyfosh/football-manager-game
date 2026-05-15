@@ -270,6 +270,13 @@ function App() {
   }
 
   const handlePlayNextMatch = () => {
+    // Recover some fitness between matches
+    setMySquad(prev => prev.map(player => {
+      const recovery = Math.random() * 10 + 5 // recover 5-15% fitness
+      const newFitness = Math.min(99, player.fitness + recovery)
+      return { ...player, fitness: Math.round(newFitness) }
+    }))
+
     // Find next unplayed fixture
     const fixtures = generateFixtures(allTeams)
     const playedKeys = leagueResults.map(r => `${r.homeTeam}-${r.awayTeam}`)
@@ -301,6 +308,15 @@ function App() {
         played: true
       }
       setLeagueResults(prev => [...prev, newResult])
+
+      // Drop fitness for players who played, recover others
+      if (currentMatch.home === selectedTeam || currentMatch.away === selectedTeam) {
+        setMySquad(prev => prev.map(player => {
+          const fitnessChange = Math.random() * 15 + 10 // lose 10-25% fitness
+          const newFitness = Math.max(40, player.fitness - fitnessChange)
+          return { ...player, fitness: Math.round(newFitness) }
+        }))
+      }
     }
     setScreen('league')
   }
@@ -321,6 +337,7 @@ function App() {
           teamName={selectedTeam}
           players={mySquad}
           onContinue={handleSquadConfirmed}
+          onBack={() => setScreen('league')}
         />
       )}
       {screen === 'transfer' && (
@@ -339,7 +356,7 @@ function App() {
           results={leagueResults}
           onPlayNextMatch={handlePlayNextMatch}
           onViewComplete={() => setScreen('endofseason')}
-
+          onViewSquad={() => setScreen('squad')}
         />
       )}
       {screen === 'match' && currentMatch && (

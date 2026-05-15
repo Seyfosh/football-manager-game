@@ -22,6 +22,7 @@ interface SquadScreenProps {
   teamName: string
   players: Player[]
   onContinue: () => void
+  onBack?: () => void
 }
 
 const getMoraleColor = (morale: string) => {
@@ -47,8 +48,7 @@ const getFitnessColor = (fitness: number) => {
   return 'bg-red-500'
 }
 
-function SquadScreen({ teamName, players, onContinue }: SquadScreenProps) {
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+function SquadScreen({ teamName, players, onContinue, onBack }: SquadScreenProps) {  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [starting11, setStarting11] = useState<number[]>(
     players.slice(0, 11).map(p => p.id)
   )
@@ -75,9 +75,19 @@ function SquadScreen({ teamName, players, onContinue }: SquadScreenProps) {
     <div className="min-h-screen bg-gray-900 text-white p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-green-400">Squad Management</h1>
-          <p className="text-gray-400">{teamName}</p>
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition-colors"
+            >
+              ← Back
+            </button>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-green-400">Squad Management</h1>
+            <p className="text-gray-400">{teamName}</p>
+          </div>
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-400">Starting 11</div>

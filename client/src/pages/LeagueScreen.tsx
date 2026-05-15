@@ -23,10 +23,10 @@ interface LeagueScreenProps {
   results: MatchResult[]
   onPlayNextMatch: () => void
   onViewComplete: () => void
+  onViewSquad: () => void
 }
 
-function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewComplete }: LeagueScreenProps) {
-
+function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewComplete, onViewSquad }: LeagueScreenProps) {
   // Calculate standings from results
   const standings: TeamStats[] = teams.map(name => {
     const homeGames = results.filter(r => r.homeTeam === name)
@@ -95,21 +95,29 @@ function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewCompl
           <h1 className="text-3xl font-bold text-green-400">🏆 League Table</h1>
           <p className="text-gray-400">Your team: <span className="text-white font-bold">{playerTeam}</span></p>
         </div>
-        {!isSeasonComplete ? (
+        <div className="flex gap-3">
           <button
-            onClick={onPlayNextMatch}
-            className="bg-green-500 hover:bg-green-400 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+            onClick={onViewSquad}
+            className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-6 py-3 rounded-xl transition-colors"
           >
-            ⚽ Play Next Match
+            👥 My Squad
           </button>
-        ) : (
-          <button
-            onClick={onViewComplete}
-            className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl transition-colors"
-          >
-            🏆 Season Complete!
-          </button>
-        )}
+          {!isSeasonComplete ? (
+            <button
+              onClick={onPlayNextMatch}
+              className="bg-green-500 hover:bg-green-400 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+            >
+              ⚽ Play Next Match
+            </button>
+          ) : (
+            <button
+              onClick={onViewComplete}
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl transition-colors"
+            >
+              🏆 Season Complete!
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-6">
