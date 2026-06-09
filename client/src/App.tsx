@@ -7,6 +7,7 @@ import MatchScreen from './pages/MatchScreen'
 import LeagueScreen from './pages/LeagueScreen'
 import EndOfSeasonScreen from './pages/EndOfSeasonScreen'
 import ChampionsLeagueScreen from './pages/ChampionsLeagueScreen'
+import NavBar from './components/NavBar'
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -559,7 +560,7 @@ function App() {
           teamName={selectedTeam}
           players={mySquad}
           onContinue={handleSquadConfirmed}
-          onBack={() => setScreen('league')}
+          onBack={leagueResults.length > 0 ? () => setScreen('league') : undefined}
         />
       )}
       {screen === 'transfer' && (
@@ -569,6 +570,17 @@ function App() {
           onPurchase={handlePurchase}
           onContinue={handleTransferComplete}
           timeLeft={600}
+        />
+      )}
+      {/* Navigation Bar - only show during season */}
+      {['league', 'cl', 'squad', 'match'].includes(screen) && allTeams.length > 0 && (
+        <NavBar
+          currentScreen={screen}
+          playerTeam={selectedTeam}
+          onGoLeague={() => setScreen('league')}
+          onGoCL={() => setScreen('cl')}
+          onGoSquad={() => setScreen('squad')}
+          onGoTransfer={() => setScreen('midtransfer')}
         />
       )}
       {screen === 'league' && (
@@ -647,4 +659,4 @@ function App() {
   )
 }
 
-export default App 
+export default App
