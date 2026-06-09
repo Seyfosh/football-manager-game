@@ -24,10 +24,10 @@ interface LeagueScreenProps {
   onPlayNextMatch: () => void
   onViewComplete: () => void
   onViewSquad: () => void
+  onViewCL: () => void
 }
 
-function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewComplete, onViewSquad }: LeagueScreenProps) {
-  // Calculate standings from results
+function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewComplete, onViewSquad, onViewCL }: LeagueScreenProps) {  // Calculate standings from results
   const standings: TeamStats[] = teams.map(name => {
     const homeGames = results.filter(r => r.homeTeam === name)
     const awayGames = results.filter(r => r.awayTeam === name)
@@ -101,6 +101,12 @@ function LeagueScreen({ teams, playerTeam, results, onPlayNextMatch, onViewCompl
             className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-6 py-3 rounded-xl transition-colors"
           >
             👥 My Squad
+          </button>
+          <button
+            onClick={onViewCL}
+            className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+          >
+            🏆 Champions League
           </button>
           {!isSeasonComplete ? (
             <button

@@ -6,7 +6,7 @@ import TransferMarketScreen from './pages/TransferMarketScreen'
 import MatchScreen from './pages/MatchScreen'
 import LeagueScreen from './pages/LeagueScreen'
 import EndOfSeasonScreen from './pages/EndOfSeasonScreen'
-
+import ChampionsLeagueScreen from './pages/ChampionsLeagueScreen'
 
 const TEAM_PLAYERS: Record<string, any[]> = {
   'Manchester City': [
@@ -226,19 +226,101 @@ const TEAM_OVRS: Record<string, number> = {
   'Feyenoord': 79,
 }
 
+// AI teams to fill CL groups
+const AI_CL_TEAMS = [
+  { name: 'Atletico Madrid', ovr: 85 },
+  { name: 'Juventus', ovr: 83 },
+  { name: 'Liverpool', ovr: 87 },
+  { name: 'Chelsea', ovr: 84 },
+]
+
+function generateCLGroups(humanTeams: string[]): { team: string, group: string }[] {
+  const allTeams = [
+    ...humanTeams.map(t => ({ name: t, isHuman: true })),
+    ...AI_CL_TEAMS.map(t => ({ name: t.name, isHuman: false }))
+  ]
+
+  // Shuffle and assign to groups
+  const shuffled = [...allTeams].sort(() => Math.random() - 0.5)
+  const groups = ['A', 'B', 'C', 'D']
+  const teamsPerGroup = Math.ceil(shuffled.length / 4)
+
+  return shuffled.map((team, idx) => ({
+    team: team.name,
+    group: groups[Math.floor(idx / teamsPerGroup)]
+  }))
+}
+
+function generateCLGroupMatches(groupAssignments: { team: string, group: string }[]): any[] {
+  const matches: any[] = []
+  const groups = ['A', 'B', 'C', 'D']
+
+  groups.forEach(group => {
+    const groupTeams = groupAssignments.filter(g => g.group === group).map(g => g.team)
+    for (let i = 0; i < groupTeams.length; i++) {
+      for (let j = i + 1; j < groupTeams.length; j++) {
+        matches.push({
+          home: groupTeams[i],
+          away: groupTeams[j],
+          homeScore: undefined,
+          awayScore: undefined,
+          played: false,
+          round: 'group',
+          group
+        })
+        matches.push({
+          home: groupTeams[j],
+          away: groupTeams[i],
+          homeScore: undefined,
+          awayScore: undefined,
+          played: false,
+          round: 'group',
+          group
+        })
+      }
+    }
+  })
+
+  return matches
+}
+
+function simulateAIMatch(homeOvr: number, awayOvr: number): { homeScore: number, awayScore: number } {
+  const homeAdv = 1.1
+  const homeStrength = (homeOvr * homeAdv) / awayOvr
+  const awayStrength = awayOvr / (homeOvr * homeAdv)
+
+  let homeScore = 0
+  let awayScore = 0
+
+  for (let min = 1; min <= 90; min++) {
+    if (Math.random() < 0.08 * homeStrength) {
+      if (Math.random() < 0.45) {
+        if (Math.random() < 0.35) homeScore++
+      }
+    }
+    if (Math.random() < 0.08 * awayStrength) {
+      if (Math.random() < 0.45) {
+        if (Math.random() < 0.35) awayScore++
+      }
+    }
+  }
+
+  return { homeScore, awayScore }
+}
+
 function App() {
-  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason' | 'midtransfer'>('lobby')
+  const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason' | 'midtransfer' | 'cl'>('lobby')
   const [playerName, setPlayerName] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('')
   const [mySquad, setMySquad] = useState<any[]>([])
   const [draftSelections, setDraftSelections] = useState<Record<string, string>>({})
   const [allTeams, setAllTeams] = useState<string[]>([])
-  const [currentMatch, setCurrentMatch] = useState<{ home: string, away: string } | null>(null)
+  const [currentMatch, setCurrentMatch] = useState<{ home: string, away: string, round: string } | null>(null)
   const [leagueResults, setLeagueResults] = useState<any[]>([])
-  const [seasonComplete, setSeasonComplete] = useState(false)
   const [midSeasonWindowUsed, setMidSeasonWindowUsed] = useState(false)
-
-
+  const [clMatches, setCLMatches] = useState<any[]>([])
+  const [clGroupAssignments, setCLGroupAssignments] = useState<{ team: string, group: string }[]>([])
+  const [currentContext, setCurrentContext] = useState<'league' | 'cl'>('league')
 
   const handleCreateGame = (name: string) => {
     setPlayerName(name)
@@ -253,6 +335,13 @@ function App() {
     setAllTeams(teams)
     const squad = TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)
     setMySquad(squad)
+
+    // Set up Champions League
+    const groupAssignments = generateCLGroups(teams)
+    setCLGroupAssignments(groupAssignments)
+    const clGroupMatches = generateCLGroupMatches(groupAssignments)
+    setCLMatches(clGroupMatches)
+
     setScreen('squad')
   }
 
@@ -270,21 +359,26 @@ function App() {
   }
 
   const handlePlayNextMatch = () => {
-    // Recover some fitness between matches
     setMySquad(prev => prev.map(player => {
-      const recovery = Math.random() * 10 + 5 // recover 5-15% fitness
+      const recovery = Math.random() * 10 + 5
       const newFitness = Math.min(99, player.fitness + recovery)
       return { ...player, fitness: Math.round(newFitness) }
     }))
 
-    // Find next unplayed fixture
     const fixtures = generateFixtures(allTeams)
     const playedKeys = leagueResults.map(r => `${r.homeTeam}-${r.awayTeam}`)
     const nextFixture = fixtures.find(f => !playedKeys.includes(`${f.home}-${f.away}`))
     if (nextFixture) {
-      setCurrentMatch(nextFixture)
+      setCurrentMatch({ home: nextFixture.home, away: nextFixture.away, round: 'league' })
+      setCurrentContext('league')
       setScreen('match')
     }
+  }
+
+  const handlePlayCLMatch = (home: string, away: string, round: string) => {
+    setCurrentMatch({ home, away, round })
+    setCurrentContext('cl')
+    setScreen('match')
   }
 
   const generateFixtures = (teams: string[]) => {
@@ -298,37 +392,155 @@ function App() {
     return fixtures
   }
 
-  const handleMatchComplete = (result: any) => {
-    if (currentMatch) {
-      const newResult = {
-        homeTeam: currentMatch.home,
-        awayTeam: currentMatch.away,
-        homeScore: result.homeScore,
-        awayScore: result.awayScore,
-        played: true
+  const advanceCLKnockouts = (updatedMatches: any[]) => {
+    const groups = ['A', 'B', 'C', 'D']
+    const groupStage = updatedMatches.filter(m => m.round === 'group')
+    const allGroupsComplete = groups.every(group => {
+      const gMatches = groupStage.filter(m => m.group === group)
+      return gMatches.every(m => m.played)
+    })
+
+    if (!allGroupsComplete) return updatedMatches
+
+    const r16Exists = updatedMatches.some(m => m.round === 'r16')
+    if (r16Exists) {
+      // Check if R16 complete, generate QF
+      const r16 = updatedMatches.filter(m => m.round === 'r16')
+      if (r16.every(m => m.played) && !updatedMatches.some(m => m.round === 'qf')) {
+        const winners = r16.map(m =>
+          (m.homeScore || 0) >= (m.awayScore || 0) ? m.home : m.away
+        )
+        const qfMatches = []
+        for (let i = 0; i < winners.length; i += 2) {
+          if (winners[i + 1]) {
+            qfMatches.push({ home: winners[i], away: winners[i + 1], played: false, round: 'qf' })
+          }
+        }
+        return [...updatedMatches, ...qfMatches]
       }
 
-      const updatedResults = [...leagueResults, newResult]
-      setLeagueResults(updatedResults)
-
-      // Drop fitness for players who played
-      if (currentMatch.home === selectedTeam || currentMatch.away === selectedTeam) {
-        setMySquad(prev => prev.map(player => {
-          const fitnessChange = Math.random() * 15 + 10
-          const newFitness = Math.max(40, player.fitness - fitnessChange)
-          return { ...player, fitness: Math.round(newFitness) }
-        }))
+      // Check if QF complete, generate SF
+      const qf = updatedMatches.filter(m => m.round === 'qf')
+      if (qf.length > 0 && qf.every(m => m.played) && !updatedMatches.some(m => m.round === 'sf')) {
+        const winners = qf.map(m =>
+          (m.homeScore || 0) >= (m.awayScore || 0) ? m.home : m.away
+        )
+        const sfMatches = []
+        for (let i = 0; i < winners.length; i += 2) {
+          if (winners[i + 1]) {
+            sfMatches.push({ home: winners[i], away: winners[i + 1], played: false, round: 'sf' })
+          }
+        }
+        return [...updatedMatches, ...sfMatches]
       }
 
-      // Check if mid-season transfer window should open
-      const totalFixtures = generateFixtures(allTeams).length
-      const halfwayPoint = Math.floor(totalFixtures / 2)
-      if (updatedResults.length === halfwayPoint && !midSeasonWindowUsed) {
-        setScreen('midtransfer')
-        return
+      // Check if SF complete, generate Final
+      const sf = updatedMatches.filter(m => m.round === 'sf')
+      if (sf.length > 0 && sf.every(m => m.played) && !updatedMatches.some(m => m.round === 'final')) {
+        const winners = sf.map(m =>
+          (m.homeScore || 0) >= (m.awayScore || 0) ? m.home : m.away
+        )
+        return [...updatedMatches, { home: winners[0], away: winners[1], played: false, round: 'final' }]
+      }
+
+      return updatedMatches
+    }
+
+    // Generate R16 from group winners and runners-up
+    const groupAdvancers: string[] = []
+    groups.forEach(group => {
+      const gTeams = clGroupAssignments.filter(g => g.group === group).map(g => g.team)
+      const standings = gTeams.map(team => {
+        const homeGames = groupStage.filter(m => m.home === team && m.group === group && m.played)
+        const awayGames = groupStage.filter(m => m.away === team && m.group === group && m.played)
+        let pts = 0
+        homeGames.forEach((m: any) => {
+          if ((m.homeScore || 0) > (m.awayScore || 0)) pts += 3
+          else if (m.homeScore === m.awayScore) pts += 1
+        })
+        awayGames.forEach((m: any) => {
+          if ((m.awayScore || 0) > (m.homeScore || 0)) pts += 3
+          else if (m.awayScore === m.homeScore) pts += 1
+        })
+        return { team, pts }
+      }).sort((a, b) => b.pts - a.pts)
+
+      if (standings[0]) groupAdvancers.push(standings[0].team)
+      if (standings[1]) groupAdvancers.push(standings[1].team)
+    })
+
+    const r16Matches = []
+    for (let i = 0; i < groupAdvancers.length; i += 2) {
+      if (groupAdvancers[i + 1]) {
+        r16Matches.push({
+          home: groupAdvancers[i],
+          away: groupAdvancers[i + 1],
+          played: false,
+          round: 'r16'
+        })
       }
     }
-    setScreen('league')
+
+    return [...updatedMatches, ...r16Matches]
+  }
+
+  const handleMatchComplete = (result: any) => {
+    if (currentMatch) {
+      if (currentContext === 'league') {
+        const newResult = {
+          homeTeam: currentMatch.home,
+          awayTeam: currentMatch.away,
+          homeScore: result.homeScore,
+          awayScore: result.awayScore,
+          played: true
+        }
+
+        const updatedResults = [...leagueResults, newResult]
+        setLeagueResults(updatedResults)
+
+        if (currentMatch.home === selectedTeam || currentMatch.away === selectedTeam) {
+          setMySquad(prev => prev.map(player => {
+            const fitnessChange = Math.random() * 15 + 10
+            const newFitness = Math.max(40, player.fitness - fitnessChange)
+            return { ...player, fitness: Math.round(newFitness) }
+          }))
+        }
+
+        const totalFixtures = generateFixtures(allTeams).length
+        const halfwayPoint = Math.floor(totalFixtures / 2)
+        if (updatedResults.length === halfwayPoint && !midSeasonWindowUsed) {
+          setScreen('midtransfer')
+          return
+        }
+
+        setScreen('league')
+      } else {
+        // CL match
+        const updatedCLMatches = clMatches.map(m => {
+          if (m.home === currentMatch.home && m.away === currentMatch.away && m.round === currentMatch.round && !m.played) {
+            return { ...m, homeScore: result.homeScore, awayScore: result.awayScore, played: true }
+          }
+          return m
+        })
+
+        // Auto-simulate AI matches in same round
+        const currentRoundMatches = updatedCLMatches.filter(m => m.round === currentMatch.round)
+        const aiSimulated = updatedCLMatches.map(m => {
+          if (m.round === currentMatch.round && !m.played &&
+              m.home !== selectedTeam && m.away !== selectedTeam) {
+            const homeOvr = TEAM_OVRS[m.home] || 82
+            const awayOvr = TEAM_OVRS[m.away] || 82
+            const aiResult = simulateAIMatch(homeOvr, awayOvr)
+            return { ...m, homeScore: aiResult.homeScore, awayScore: aiResult.awayScore, played: true }
+          }
+          return m
+        })
+
+        const withKnockouts = advanceCLKnockouts(aiSimulated)
+        setCLMatches(withKnockouts)
+        setScreen('cl')
+      }
+    }
   }
 
   return (
@@ -367,6 +579,20 @@ function App() {
           onPlayNextMatch={handlePlayNextMatch}
           onViewComplete={() => setScreen('endofseason')}
           onViewSquad={() => setScreen('squad')}
+          onViewCL={() => setScreen('cl')}
+        />
+      )}
+      {screen === 'cl' && (
+        <ChampionsLeagueScreen
+          teams={[
+            ...allTeams.map(t => ({ name: t, ovr: TEAM_OVRS[t] || 82 })),
+            ...AI_CL_TEAMS
+          ]}
+          playerTeam={selectedTeam}
+          onPlayMatch={handlePlayCLMatch}
+          onMatchResult={() => {}}
+          matches={clMatches}
+          onComplete={() => setScreen('league')}
         />
       )}
       {screen === 'match' && currentMatch && (
@@ -421,5 +647,4 @@ function App() {
   )
 }
 
-export default App
-
+export default App 
