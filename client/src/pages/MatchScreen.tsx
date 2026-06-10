@@ -46,6 +46,7 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
   const [isComplete, setIsComplete] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
+  const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 })
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001')
@@ -60,6 +61,24 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
 
       if (data.events && data.events.length > 0) {
         setDisplayedEvents(prev => [...prev, ...data.events])
+        // Move ball toward goal on events
+        const goalEvent = data.events.find((e: any) => e.type === 'goal')
+        if (goalEvent) {
+          setBallPosition({ x: goalEvent.team === 'home' ? 95 : 5, y: 50 })
+          setTimeout(() => setBallPosition({ x: 50, y: 50 }), 1500)
+        } else {
+          const chanceEvent = data.events[0]
+          const attackX = chanceEvent.team === 'home' ? 75 + Math.random() * 15 : 10 + Math.random() * 15
+          const attackY = 30 + Math.random() * 40
+          setBallPosition({ x: Math.round(attackX), y: Math.round(attackY) })
+        }
+      } else {
+        // Random ball movement based on possession
+        const possession = data.homeStats?.possession || 50
+        const xVariance = (Math.random() - 0.5) * 25
+        const newX = Math.max(5, Math.min(95, possession / 2 + 25 + xVariance))
+        const newY = Math.max(10, Math.min(90, 50 + (Math.random() - 0.5) * 60))
+        setBallPosition({ x: Math.round(newX), y: Math.round(newY) })
       }
     })
 
@@ -172,6 +191,88 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
           </div>
         )}
       </div>
+    {/* Pitch Graphic */}
+      {isSimulating && (
+        <div className="bg-green-700 rounded-xl mb-6 relative overflow-hidden border-2 border-green-600" style={{ height: '260px' }}>
+          {/* Pitch stripes */}
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="absolute top-0 bottom-0 opacity-10 bg-green-500"
+              style={{ left: `${i * 12.5}%`, width: '6.25%' }} />
+          ))}
+
+          {/* Pitch markings */}
+          <div className="absolute left-1/2 top-0 bottom-0 border-l-2 border-white opacity-20" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-24 h-24 border-2 border-white rounded-full opacity-20" />
+          </div>
+          <div className="absolute left-1/2 top-1/2 w-2 h-2 bg-white rounded-full opacity-30" style={{ transform: 'translate(-50%, -50%)' }} />
+
+          {/* Left penalty box */}
+          <div className="absolute border-2 border-white opacity-20"
+            style={{ left: 0, top: '25%', width: '14%', height: '50%', borderLeft: 'none' }} />
+          {/* Right penalty box */}
+          <div className="absolute border-2 border-white opacity-20"
+            style={{ right: 0, top: '25%', width: '14%', height: '50%', borderRight: 'none' }} />
+
+          {/* Left Goal */}
+          <div className="absolute border-2 border-white bg-white bg-opacity-30 rounded-r"
+            style={{ left: 0, top: '38%', width: '2%', height: '24%', borderLeft: 'none' }} />
+          {/* Right Goal */}
+          <div className="absolute border-2 border-white bg-white bg-opacity-30 rounded-l"
+            style={{ right: 0, top: '38%', width: '2%', height: '24%', borderRight: 'none' }} />
+
+          {/* Team names */}
+          <div className="absolute left-3 top-2 text-xs text-white font-bold opacity-80">{homeTeam}</div>
+          <div className="absolute right-3 top-2 text-xs text-white font-bold opacity-80 text-right">{awayTeam}</div>
+
+          {/* HOME TEAM - 4-3-3 formation (green) */}
+          {/* GK */}
+          <div className="absolute w-4 h-4 bg-yellow-400 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold z-10" style={{ left: '3%', top: '50%', transform: 'translateY(-50%)' }} title="GK" />
+          {/* Defenders */}
+          <div className="absolute w-4 h-4 bg-green-400 rounded-full border-2 border-white z-10" style={{ left: '18%', top: '15%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-400 rounded-full border-2 border-white z-10" style={{ left: '18%', top: '37%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-400 rounded-full border-2 border-white z-10" style={{ left: '18%', top: '63%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-400 rounded-full border-2 border-white z-10" style={{ left: '18%', top: '85%', transform: 'translateY(-50%)' }} />
+          {/* Midfielders */}
+          <div className="absolute w-4 h-4 bg-green-300 rounded-full border-2 border-white z-10" style={{ left: '33%', top: '25%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-300 rounded-full border-2 border-white z-10" style={{ left: '33%', top: '50%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-300 rounded-full border-2 border-white z-10" style={{ left: '33%', top: '75%', transform: 'translateY(-50%)' }} />
+          {/* Forwards */}
+          <div className="absolute w-4 h-4 bg-green-200 rounded-full border-2 border-white z-10" style={{ left: '44%', top: '20%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-200 rounded-full border-2 border-white z-10" style={{ left: '44%', top: '50%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-green-200 rounded-full border-2 border-white z-10" style={{ left: '44%', top: '80%', transform: 'translateY(-50%)' }} />
+
+          {/* AWAY TEAM - 4-3-3 formation (blue) */}
+          {/* GK */}
+          <div className="absolute w-4 h-4 bg-orange-400 rounded-full border-2 border-white z-10" style={{ right: '3%', top: '50%', transform: 'translateY(-50%)' }} title="GK" />
+          {/* Defenders */}
+          <div className="absolute w-4 h-4 bg-blue-400 rounded-full border-2 border-white z-10" style={{ right: '18%', top: '15%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-400 rounded-full border-2 border-white z-10" style={{ right: '18%', top: '37%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-400 rounded-full border-2 border-white z-10" style={{ right: '18%', top: '63%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-400 rounded-full border-2 border-white z-10" style={{ right: '18%', top: '85%', transform: 'translateY(-50%)' }} />
+          {/* Midfielders */}
+          <div className="absolute w-4 h-4 bg-blue-300 rounded-full border-2 border-white z-10" style={{ right: '33%', top: '25%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-300 rounded-full border-2 border-white z-10" style={{ right: '33%', top: '50%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-300 rounded-full border-2 border-white z-10" style={{ right: '33%', top: '75%', transform: 'translateY(-50%)' }} />
+          {/* Forwards */}
+          <div className="absolute w-4 h-4 bg-blue-200 rounded-full border-2 border-white z-10" style={{ right: '44%', top: '20%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-200 rounded-full border-2 border-white z-10" style={{ right: '44%', top: '50%', transform: 'translateY(-50%)' }} />
+          <div className="absolute w-4 h-4 bg-blue-200 rounded-full border-2 border-white z-10" style={{ right: '44%', top: '80%', transform: 'translateY(-50%)' }} />
+
+          {/* Ball */}
+          <div
+            className="absolute w-5 h-5 bg-white rounded-full shadow-xl flex items-center justify-center text-xs z-20"
+            style={{
+              left: `${ballPosition.x}%`,
+              top: `${ballPosition.y}%`,
+              transform: 'translate(-50%, -50%)',
+              transition: 'left 0.6s ease-in-out, top 0.6s ease-in-out'
+            }}
+          >
+            ⚽
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       {homeStats && awayStats && (
