@@ -179,6 +179,19 @@ const TEAM_PLAYERS: Record<string, any[]> = {
     { id: 460, name: 'Igor Paixao', club: 'Feyenoord', position: 'LW', age: 24, ovr: 77, pace: 86, shooting: 70, passing: 66, dribbling: 80, defending: 36, physical: 62, fitness: 86, morale: 'High', status: 'Healthy' },
     { id: 461, name: 'Calvin Stengs', club: 'Feyenoord', position: 'CAM', age: 25, ovr: 76, pace: 76, shooting: 68, passing: 78, dribbling: 78, defending: 52, physical: 64, fitness: 84, morale: 'High', status: 'Healthy' },
   ],
+  'Monaco': [
+    { id: 501, name: 'Wissam Ben Yedder', club: 'Monaco', position: 'ST', age: 33, ovr: 82, pace: 76, shooting: 84, passing: 70, dribbling: 78, defending: 38, physical: 72, fitness: 82, morale: 'High', status: 'Healthy' },
+    { id: 502, name: 'Takumi Minamino', club: 'Monaco', position: 'CAM', age: 29, ovr: 80, pace: 82, shooting: 76, passing: 78, dribbling: 80, defending: 56, physical: 68, fitness: 87, morale: 'High', status: 'Healthy' },
+    { id: 503, name: 'Youssouf Fofana', club: 'Monaco', position: 'CDM', age: 25, ovr: 81, pace: 78, shooting: 64, passing: 78, dribbling: 74, defending: 80, physical: 80, fitness: 89, morale: 'High', status: 'Healthy' },
+    { id: 504, name: 'Mohamed Camara', club: 'Monaco', position: 'CDM', age: 24, ovr: 79, pace: 74, shooting: 58, passing: 74, dribbling: 70, defending: 80, physical: 82, fitness: 88, morale: 'High', status: 'Healthy' },
+    { id: 505, name: 'Axel Disasi', club: 'Monaco', position: 'CB', age: 26, ovr: 80, pace: 80, shooting: 46, passing: 68, dribbling: 60, defending: 82, physical: 80, fitness: 89, morale: 'High', status: 'Healthy' },
+    { id: 506, name: 'Radoslaw Majecki', club: 'Monaco', position: 'GK', age: 24, ovr: 78, pace: 50, shooting: 22, passing: 64, dribbling: 30, defending: 78, physical: 70, fitness: 86, morale: 'High', status: 'Healthy' },
+    { id: 507, name: 'Breel Embolo', club: 'Monaco', position: 'ST', age: 27, ovr: 79, pace: 84, shooting: 76, passing: 64, dribbling: 74, defending: 40, physical: 80, fitness: 84, morale: 'High', status: 'Healthy' },
+    { id: 508, name: 'Caio Henrique', club: 'Monaco', position: 'LB', age: 26, ovr: 79, pace: 82, shooting: 52, passing: 72, dribbling: 72, defending: 74, physical: 70, fitness: 87, morale: 'High', status: 'Healthy' },
+    { id: 509, name: 'Vanderson', club: 'Monaco', position: 'RB', age: 22, ovr: 78, pace: 86, shooting: 50, passing: 68, dribbling: 72, defending: 72, physical: 70, fitness: 88, morale: 'High', status: 'Healthy' },
+    { id: 510, name: 'Chrislain Matsima', club: 'Monaco', position: 'CB', age: 21, ovr: 75, pace: 76, shooting: 42, passing: 64, dribbling: 56, defending: 76, physical: 74, fitness: 86, morale: 'High', status: 'Healthy' },
+    { id: 511, name: 'Krepin Diatta', club: 'Monaco', position: 'RW', age: 24, ovr: 77, pace: 88, shooting: 70, passing: 66, dribbling: 78, defending: 36, physical: 66, fitness: 85, morale: 'Medium', status: 'Healthy' },
+  ],
 }
 
 const getDefaultSquad = (teamName: string) => [
@@ -209,6 +222,7 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Porto': 65000000,
   'PSV': 70000000,
   'Feyenoord': 55000000,
+  'Monaco': 90000000,
 }
 
 const TEAM_OVRS: Record<string, number> = {
@@ -225,6 +239,7 @@ const TEAM_OVRS: Record<string, number> = {
   'Porto': 81,
   'PSV': 82,
   'Feyenoord': 79,
+  'Monaco': 81,
 }
 
 // AI teams to fill CL groups
