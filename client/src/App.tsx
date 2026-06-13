@@ -646,7 +646,7 @@ function App() {
           isMidSeason={true}
         />
       )}
-      {screen === 'endofseason' && (
+     {screen === 'endofseason' && (
         <EndOfSeasonScreen
           standings={allTeams.map(name => {
             const homeGames = leagueResults.filter(r => r.homeTeam === name)
@@ -667,11 +667,15 @@ function App() {
             return { name, played: homeGames.length + awayGames.length, won, drawn, lost, goalsFor, goalsAgainst, points: won * 3 + drawn }
           })}
           playerTeam={selectedTeam}
+          clWinner={(() => {
+            const finalMatch = clMatches.find(m => m.round === 'final' && m.played)
+            if (!finalMatch) return null
+            return (finalMatch.homeScore || 0) >= (finalMatch.awayScore || 0) ? finalMatch.home : finalMatch.away
+          })()}
           onPlayAgain={() => window.location.reload()}
         />
       )}
     </div>
   )
 }
-
 export default App

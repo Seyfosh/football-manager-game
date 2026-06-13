@@ -12,11 +12,11 @@ interface TeamStats {
 interface EndOfSeasonProps {
   standings: TeamStats[]
   playerTeam: string
+  clWinner: string | null
   onPlayAgain: () => void
 }
 
-function EndOfSeasonScreen({ standings, playerTeam, onPlayAgain }: EndOfSeasonProps) {
-  const sortedStandings = [...standings].sort((a, b) => {
+function EndOfSeasonScreen({ standings, playerTeam, clWinner, onPlayAgain }: EndOfSeasonProps) {  const sortedStandings = [...standings].sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points
     const gdA = a.goalsFor - a.goalsAgainst
     const gdB = b.goalsFor - b.goalsAgainst
@@ -88,10 +88,18 @@ function EndOfSeasonScreen({ standings, playerTeam, onPlayAgain }: EndOfSeasonPr
         </div>
         <div className="bg-gray-800 rounded-xl p-4 text-center">
           <div className="text-3xl mb-2">👑</div>
-          <div className="text-xs text-gray-400 mb-1">CHAMPION</div>
+          <div className="text-xs text-gray-400 mb-1">LEAGUE CHAMPION</div>
           <div className="font-bold text-yellow-400">{champion.name}</div>
           <div className="text-sm text-gray-400">{champion.points} points</div>
         </div>
+        {clWinner && (
+          <div className="bg-gray-800 rounded-xl p-4 text-center border border-yellow-500">
+            <div className="text-3xl mb-2">🏆</div>
+            <div className="text-xs text-gray-400 mb-1">CL WINNER</div>
+            <div className="font-bold text-yellow-400">{clWinner}</div>
+            <div className="text-sm text-gray-400">Champions of Europe!</div>
+          </div>
+        )}
       </div>
 
       {/* Final Standings */}
