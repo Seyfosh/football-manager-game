@@ -19,7 +19,6 @@ const io = new Server(httpServer, {
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
-// Load player database
 const playersData = JSON.parse(
   readFileSync(join(__dirname, 'data/players.json'), 'utf-8')
 );
@@ -34,7 +33,6 @@ app.get('/api/players/club/:club', (req, res) => {
   res.json(players);
 });
 
-// Socket.IO connection
 io.on('connection', (socket) => {
   console.log('A player connected:', socket.id);
 
@@ -52,21 +50,19 @@ io.on('connection', (socket) => {
       awayStats: { possession: 0, shots: 0, shotsOnTarget: 0, fouls: 0, yellowCards: 0, redCards: 0 },
     }
 
-    // Calculate possession once
     const totalMid = home.midfield + away.midfield
     state.homeStats.possession = Math.round((home.midfield / totalMid) * 100)
     state.awayStats.possession = 100 - state.homeStats.possession
 
     socket.emit('match_started', { home, away, state })
 
-    matchInterval = setInterval(() => {
+    const tick = () => {
       if (isPaused) return
 
       state.minute++
 
       const { events, updatedState } = simulateMinute(home, away, state)
 
-      // Update state
       state.homeScore = updatedState.homeScore
       state.awayScore = updatedState.awayScore
       state.homeStats = updatedState.homeStats
@@ -90,11 +86,47 @@ io.on('connection', (socket) => {
           awayStats: state.awayStats,
         })
       }
-    }, 1333)
-  })
+    }
 
-  socket.on('pause_match', () => { isPaused = true })
-  socket.on('resume_match', () => { isPaused = false })
+    matchInterval = setInterval(tick, 1333)
+
+    socket.on('pause_match', () => { isPaused = true })
+    socket.on('resume_match', () => { isPaused = false })
+
+    socket.on('set_speed_fast', () => {
+      if (matchInterval) {
+        clearInterval(matchInterval)
+        matchInterval = setInterval(tick, 200)
+      }
+    })
+
+    socket.on('set_speed_normal', () => {
+      if (matchInterval) {
+        clearInterval(matchInterval)
+        matchInterval = setInterval(tick, 1333)
+      }
+    })
+
+    socket.on('skip_to_result', () => {
+      if (matchInterval) {
+        clearInterval(matchInterval)
+      }
+      while (state.minute < 90) {
+        state.minute++
+        const { updatedState } = simulateMinute(home, away, state)
+        state.homeScore = updatedState.homeScore
+        state.awayScore = updatedState.awayScore
+        state.homeStats = updatedState.homeStats
+        state.awayStats = updatedState.awayStats
+      }
+      socket.emit('match_complete', {
+        homeScore: state.homeScore,
+        awayScore: state.awayScore,
+        homeStats: state.homeStats,
+        awayStats: state.awayStats,
+      })
+    })
+  })
 
   socket.on('disconnect', () => {
     if (matchInterval) clearInterval(matchInterval)

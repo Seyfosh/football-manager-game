@@ -47,6 +47,8 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
   const [isPaused, setIsPaused] = useState(false)
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 })
+  const [speed, setSpeed] = useState<'normal' | 'fast'>('normal')
+
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001')
@@ -326,6 +328,36 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
           >
             ⚽ Kick Off!
           </button>
+        )}
+        {isSimulating && !isComplete && (
+          <div className="flex gap-2">
+            <button
+              onClick={togglePause}
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-1 rounded-lg text-sm"
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
+            <button
+              onClick={() => {
+                const newSpeed = speed === 'normal' ? 'fast' : 'normal'
+                setSpeed(newSpeed)
+                if (socket) socket.emit(newSpeed === 'fast' ? 'set_speed_fast' : 'set_speed_normal')
+              }}
+              className={`font-bold px-4 py-1 rounded-lg text-sm ${
+                speed === 'fast' ? 'bg-orange-500 text-white' : 'bg-gray-600 text-white hover:bg-gray-500'
+              }`}
+            >
+              {speed === 'fast' ? '⚡ Fast' : '▶▶ Fast'}
+            </button>
+            <button
+              onClick={() => {
+                if (socket) socket.emit('skip_to_result')
+              }}
+              className="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-1 rounded-lg text-sm"
+            >
+              ⏭ Skip
+            </button>
+          </div>
         )}
         {isComplete && matchResult && (
           <button

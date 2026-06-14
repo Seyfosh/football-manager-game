@@ -588,8 +588,7 @@ function App() {
         />
       )}
       {/* Navigation Bar - only show during season */}
-      {['league', 'cl', 'squad', 'match'].includes(screen) && allTeams.length > 0 && (
-        <NavBar
+      {['league', 'cl', 'squad'].includes(screen) && allTeams.length > 0 && (        <NavBar
           currentScreen={screen}
           playerTeam={selectedTeam}
           onGoLeague={() => setScreen('league')}
