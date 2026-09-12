@@ -33,6 +33,23 @@ app.get('/api/players/club/:club', (req, res) => {
   res.json(players);
 });
 
+const squadsData = JSON.parse(
+  readFileSync(join(__dirname, 'data/squads.json'), 'utf-8')
+);
+
+app.get('/api/squads', (req, res) => {
+  res.json(squadsData);
+});
+
+app.get('/api/squads/:team', (req, res) => {
+  const team = req.params.team;
+  const squad = squadsData[team];
+  if (!squad) {
+    return res.status(404).json({ error: 'Team not found' });
+  }
+  res.json(squad);
+});
+
 io.on('connection', (socket) => {
   console.log('A player connected:', socket.id);
 

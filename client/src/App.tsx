@@ -353,6 +353,23 @@ function simulateAIMatch(homeOvr: number, awayOvr: number): { homeScore: number,
 
   return { homeScore, awayScore }
 }
+async function fetchSquad(teamName: string): Promise<any[]> {
+  try {
+    const response = await fetch(`http://localhost:3001/api/squads/${encodeURIComponent(teamName)}`)
+    if (!response.ok) throw new Error('Squad not found')
+    const squad = await response.json()
+    return squad.map((p: any) => ({
+      ...p,
+      club: teamName,
+      fitness: 85 + Math.floor(Math.random() * 10),
+      morale: 'High',
+      status: 'Healthy'
+    }))
+  } catch (error) {
+    console.error('Failed to fetch squad:', error)
+    return []
+  }
+}
 
 function App() {
   const [screen, setScreen] = useState<'lobby' | 'draft' | 'squad' | 'transfer' | 'league' | 'match' | 'endofseason' | 'midtransfer' | 'cl'>('lobby')
@@ -651,14 +668,14 @@ function App() {
           onComplete={() => setScreen('league')}
         />
       )}
-      {screen === 'match' && currentMatch && (
+           {screen === 'match' && currentMatch && (
         <MatchScreen
           homeTeam={currentMatch.home}
           awayTeam={currentMatch.away}
           homeOvr={TEAM_OVRS[currentMatch.home] || 82}
           awayOvr={TEAM_OVRS[currentMatch.away] || 82}
-          homePlayers={(TEAM_PLAYERS[currentMatch.home] || getDefaultSquad(currentMatch.home)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
-          awayPlayers={(TEAM_PLAYERS[currentMatch.away] || getDefaultSquad(currentMatch.away)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
+          homePlayers={currentMatch.home === selectedTeam ? mySquad.map(p => ({ name: p.name, position: p.position, ovr: p.ovr })) : (TEAM_PLAYERS[currentMatch.home] || getDefaultSquad(currentMatch.home)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
+          awayPlayers={currentMatch.away === selectedTeam ? mySquad.map(p => ({ name: p.name, position: p.position, ovr: p.ovr })) : (TEAM_PLAYERS[currentMatch.away] || getDefaultSquad(currentMatch.away)).map(p => ({ name: p.name, position: p.position, ovr: p.ovr }))}
           onMatchComplete={handleMatchComplete}
         />
       )}
