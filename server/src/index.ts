@@ -4,8 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { simulateMinute, MatchTeam, MatchState } from './engine/matchEngine';
-
+import { simulateMinute, MatchTeam, MatchState, createEmptyStats } from './engine/matchEngine';
 const app = express();
 const httpServer = createServer(app);
 
@@ -59,17 +58,17 @@ io.on('connection', (socket) => {
   socket.on('start_match', (data: { home: MatchTeam, away: MatchTeam }) => {
     const { home, away } = data
 
+       const totalMid = home.midfield + away.midfield
+    const homePossession = Math.round((home.midfield / totalMid) * 100)
+    const awayPossession = 100 - homePossession
+
     const state: MatchState = {
       minute: 0,
       homeScore: 0,
       awayScore: 0,
-      homeStats: { possession: 0, shots: 0, shotsOnTarget: 0, fouls: 0, yellowCards: 0, redCards: 0 },
-      awayStats: { possession: 0, shots: 0, shotsOnTarget: 0, fouls: 0, yellowCards: 0, redCards: 0 },
+      homeStats: createEmptyStats(homePossession),
+      awayStats: createEmptyStats(awayPossession),
     }
-
-    const totalMid = home.midfield + away.midfield
-    state.homeStats.possession = Math.round((home.midfield / totalMid) * 100)
-    state.awayStats.possession = 100 - state.homeStats.possession
 
     socket.emit('match_started', { home, away, state })
 

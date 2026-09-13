@@ -16,6 +16,15 @@ interface MatchStats {
   fouls: number
   yellowCards: number
   redCards: number
+  xG: number
+  passCompletion: number
+  passesAttempted: number
+  passesCompleted: number
+  keyPasses: number
+  crossAccuracy: number
+  tackleWinRate: number
+  interceptions: number
+  dribbleSuccessRate: number
 }
 
 interface MatchResult {
@@ -47,6 +56,7 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
   const [isPaused, setIsPaused] = useState(false)
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 })
+  const [passSequence, setPassSequence] = useState<{ x: number, y: number }[]>([])
   const [speed, setSpeed] = useState<'normal' | 'fast'>('normal')
 
 
@@ -63,24 +73,58 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
 
       if (data.events && data.events.length > 0) {
         setDisplayedEvents(prev => [...prev, ...data.events])
-        // Move ball toward goal on events
+                // Move ball toward goal on events
         const goalEvent = data.events.find((e: any) => e.type === 'goal')
         if (goalEvent) {
-          setBallPosition({ x: goalEvent.team === 'home' ? 95 : 5, y: 50 })
-          setTimeout(() => setBallPosition({ x: 50, y: 50 }), 1500)
+          const isHome = goalEvent.team === 'home'
+          // Build up to the edge of the box first
+          setBallPosition({ x: isHome ? 78 : 22, y: 35 + Math.random() * 30 })
+          setTimeout(() => {
+            setBallPosition({ x: isHome ? 96 : 4, y: 45 + Math.random() * 10 })
+          }, 400)
+          setTimeout(() => setBallPosition({ x: 50, y: 50 }), 1800)
         } else {
           const chanceEvent = data.events[0]
-          const attackX = chanceEvent.team === 'home' ? 75 + Math.random() * 15 : 10 + Math.random() * 15
-          const attackY = 30 + Math.random() * 40
-          setBallPosition({ x: Math.round(attackX), y: Math.round(attackY) })
+          const isHome = chanceEvent.team === 'home'
+          // Build up first
+          setBallPosition({ x: isHome ? 65 + Math.random() * 10 : 25 - Math.random() * 10, y: 30 + Math.random() * 40 })
+          setTimeout(() => {
+            const attackX = isHome ? 82 + Math.random() * 10 : 18 - Math.random() * 10
+            const attackY = 35 + Math.random() * 30
+            setBallPosition({ x: Math.round(attackX), y: Math.round(attackY) })
+          }, 400)
         }
-      } else {
-        // Random ball movement based on possession
+            } else {
+        // Build a passing sequence: ball moves through 2-3 waypoints toward the attacking third
         const possession = data.homeStats?.possession || 50
-        const xVariance = (Math.random() - 0.5) * 25
-        const newX = Math.max(5, Math.min(95, possession / 2 + 25 + xVariance))
-        const newY = Math.max(10, Math.min(90, 50 + (Math.random() - 0.5) * 60))
-        setBallPosition({ x: Math.round(newX), y: Math.round(newY) })
+        const attackingHome = Math.random() * 100 < possession
+
+        const zones = attackingHome
+          ? [
+              { x: 25 + Math.random() * 15, y: 20 + Math.random() * 60 },
+              { x: 45 + Math.random() * 15, y: 20 + Math.random() * 60 },
+              { x: 65 + Math.random() * 15, y: 20 + Math.random() * 60 },
+            ]
+          : [
+              { x: 75 - Math.random() * 15, y: 20 + Math.random() * 60 },
+              { x: 55 - Math.random() * 15, y: 20 + Math.random() * 60 },
+              { x: 35 - Math.random() * 15, y: 20 + Math.random() * 60 },
+            ]
+
+                   let step = 0
+        const playSequence = () => {
+          if (step < zones.length) {
+            setBallPosition({ x: Math.round(zones[step].x), y: Math.round(zones[step].y) })
+            step++
+            setTimeout(playSequence, 350)
+          } else {
+            // Return toward midfield after the sequence completes
+            setTimeout(() => {
+              setBallPosition({ x: 45 + Math.random() * 10, y: 35 + Math.random() * 30 })
+            }, 350)
+          }
+        }
+        playSequence()
       }
     })
 
@@ -276,13 +320,17 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
         </div>
       )}
 
-      {/* Stats */}
+            {/* Stats */}
       {homeStats && awayStats && (
         <div className="bg-gray-800 rounded-xl p-4 mb-6">
           <div className="grid grid-cols-3 gap-4 text-center text-sm">
             <div className="text-green-400 font-bold">{homeStats.possession}%</div>
             <div className="text-gray-400">Possession</div>
             <div className="text-blue-400 font-bold">{awayStats.possession}%</div>
+
+            <div className="text-green-400 font-bold">{homeStats.xG.toFixed(2)}</div>
+            <div className="text-gray-400">Expected Goals (xG)</div>
+            <div className="text-blue-400 font-bold">{awayStats.xG.toFixed(2)}</div>
 
             <div className="text-green-400 font-bold">{homeStats.shots}</div>
             <div className="text-gray-400">Shots</div>
@@ -292,9 +340,41 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
             <div className="text-gray-400">On Target</div>
             <div className="text-blue-400 font-bold">{awayStats.shotsOnTarget}</div>
 
-            <div className="text-green-400 font-bold">{homeStats.yellowCards}</div>
+            <div className="text-green-400 font-bold">{homeStats.keyPasses}</div>
+            <div className="text-gray-400">Key Passes</div>
+            <div className="text-blue-400 font-bold">{awayStats.keyPasses}</div>
+
+            <div className="text-green-400 font-bold">{homeStats.passCompletion}%</div>
+            <div className="text-gray-400">Pass Completion</div>
+            <div className="text-blue-400 font-bold">{awayStats.passCompletion}%</div>
+
+            <div className="text-green-400 font-bold">{homeStats.crossAccuracy}%</div>
+            <div className="text-gray-400">Cross Accuracy</div>
+            <div className="text-blue-400 font-bold">{awayStats.crossAccuracy}%</div>
+
+            <div className="text-green-400 font-bold">{homeStats.tackleWinRate}%</div>
+            <div className="text-gray-400">Tackle Win Rate</div>
+            <div className="text-blue-400 font-bold">{awayStats.tackleWinRate}%</div>
+
+            <div className="text-green-400 font-bold">{homeStats.interceptions}</div>
+            <div className="text-gray-400">Interceptions</div>
+            <div className="text-blue-400 font-bold">{awayStats.interceptions}</div>
+
+            <div className="text-green-400 font-bold">{homeStats.dribbleSuccessRate}%</div>
+            <div className="text-gray-400">Dribble Success</div>
+            <div className="text-blue-400 font-bold">{awayStats.dribbleSuccessRate}%</div>
+
+                        <div className="text-green-400 font-bold">{homeStats.yellowCards}</div>
             <div className="text-gray-400">Yellow Cards</div>
             <div className="text-blue-400 font-bold">{awayStats.yellowCards}</div>
+
+            <div className="text-green-400 font-bold">{homeStats.fouls}</div>
+            <div className="text-gray-400">Fouls</div>
+            <div className="text-blue-400 font-bold">{awayStats.fouls}</div>
+
+            <div className="text-green-400 font-bold">{homeStats.passesCompleted}/{homeStats.passesAttempted}</div>
+            <div className="text-gray-400">Passes</div>
+            <div className="text-blue-400 font-bold">{awayStats.passesCompleted}/{awayStats.passesAttempted}</div>
           </div>
         </div>
       )}
