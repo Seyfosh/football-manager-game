@@ -57,6 +57,7 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [ballPosition, setBallPosition] = useState({ x: 50, y: 50 })
   const [passSequence, setPassSequence] = useState<{ x: number, y: number }[]>([])
+  const [showGoalCelebration, setShowGoalCelebration] = useState<'home' | 'away' | null>(null)
   const [speed, setSpeed] = useState<'normal' | 'fast'>('normal')
 
 
@@ -75,13 +76,17 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
         setDisplayedEvents(prev => [...prev, ...data.events])
                 // Move ball toward goal on events
         const goalEvent = data.events.find((e: any) => e.type === 'goal')
-        if (goalEvent) {
+                if (goalEvent) {
           const isHome = goalEvent.team === 'home'
           // Build up to the edge of the box first
           setBallPosition({ x: isHome ? 78 : 22, y: 35 + Math.random() * 30 })
           setTimeout(() => {
             setBallPosition({ x: isHome ? 96 : 4, y: 45 + Math.random() * 10 })
           }, 400)
+          setTimeout(() => {
+            setShowGoalCelebration(goalEvent.team)
+            setTimeout(() => setShowGoalCelebration(null), 1800)
+          }, 700)
           setTimeout(() => setBallPosition({ x: 50, y: 50 }), 1800)
         } else {
           const chanceEvent = data.events[0]
@@ -193,8 +198,24 @@ function MatchScreen({ homeTeam, awayTeam, homeOvr, awayOvr, homePlayers, awayPl
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    return (
+    <div className="min-h-screen bg-gray-900 text-white p-6 relative">
+      {/* Goal Celebration Overlay */}
+      {showGoalCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-black bg-opacity-70 absolute inset-0" />
+          <div className="relative text-center animate-bounce">
+            <div className="text-8xl mb-2">⚽</div>
+            <div className={`text-6xl font-black ${showGoalCelebration === 'home' ? 'text-green-400' : 'text-blue-400'}`}>
+              GOAL!
+            </div>
+            <div className="text-2xl font-bold text-white mt-2">
+              {showGoalCelebration === 'home' ? homeTeam : awayTeam}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Scoreboard */}
       <div className="bg-gray-800 rounded-2xl p-6 mb-6 text-center">
         <div className="flex justify-between items-center mb-4">
