@@ -293,7 +293,6 @@
     { "id": 1312, "name": "Breel Embolo", "position": "ST", "age": 28, "ovr": 80, "pace": 84, "shooting": 76, "passing": 64, "dribbling": 74, "defending": 40, "physical": 80 },
     { "id": 1313, "name": "Folarin Balogun", "position": "ST", "age": 24, "ovr": 79, "pace": 82, "shooting": 78, "passing": 64, "dribbling": 74, "defending": 36, "physical": 72 }
   ],
-  ,
   "Liverpool": [
     { "id": 1401, "name": "Alisson Becker", "position": "GK", "age": 33, "ovr": 88, "pace": 54, "shooting": 25, "passing": 78, "dribbling": 38, "defending": 88, "physical": 76 },
     { "id": 1402, "name": "Giorgi Mamardashvili", "position": "GK", "age": 24, "ovr": 80, "pace": 50, "shooting": 20, "passing": 68, "dribbling": 32, "defending": 80, "physical": 76 },

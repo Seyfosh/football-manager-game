@@ -14,7 +14,13 @@ const TEAMS = [
   { name: 'Porto', league: 'Primeira Liga', ovr: 81, color: 'bg-blue-600' },
   { name: 'PSV', league: 'Eredivisie', ovr: 82, color: 'bg-red-500' },
   { name: 'Feyenoord', league: 'Eredivisie', ovr: 79, color: 'bg-red-600' },
+  { name: 'Liverpool', league: 'Premier League', ovr: 85, color: 'bg-red-700' },
+  { name: 'Chelsea', league: 'Premier League', ovr: 82, color: 'bg-blue-800' },
+  { name: 'Tottenham', league: 'Premier League', ovr: 81, color: 'bg-gray-100' },
+  { name: 'Newcastle', league: 'Premier League', ovr: 81, color: 'bg-gray-900' },
+  { name: 'Aston Villa', league: 'Premier League', ovr: 79, color: 'bg-purple-800' },
 ]
+
 
 interface DraftScreenProps {
   players: string[]

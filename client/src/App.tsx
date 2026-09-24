@@ -253,7 +253,13 @@ const TEAM_BUDGETS: Record<string, number> = {
   'PSV': 70000000,
   'Feyenoord': 55000000,
   'Monaco': 90000000,
+  'Liverpool': 160000000,
+  'Chelsea': 150000000,
+  'Tottenham': 110000000,
+  'Newcastle': 120000000,
+  'Aston Villa': 100000000,
 }
+
 
 const TEAM_OVRS: Record<string, number> = {
   'Manchester City': 89,
@@ -270,7 +276,13 @@ const TEAM_OVRS: Record<string, number> = {
   'PSV': 82,
   'Feyenoord': 79,
   'Monaco': 81,
+  'Liverpool': 85,
+  'Chelsea': 82,
+  'Tottenham': 81,
+  'Newcastle': 81,
+  'Aston Villa': 79,
 }
+
 
 // AI teams to fill CL groups
 const AI_CL_TEAMS = [
@@ -390,14 +402,15 @@ function App() {
     setScreen('draft')
   }
 
-  const handleDraftComplete = (selections: Record<string, string>) => {
+    const handleDraftComplete = async (selections: Record<string, string>) => {
     setDraftSelections(selections)
     const myTeam = selections[playerName]
     setSelectedTeam(myTeam)
     const teams = Object.values(selections)
     setAllTeams(teams)
-    const squad = TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)
-    setMySquad(squad)
+
+    const squad = await fetchSquad(myTeam)
+    setMySquad(squad.length > 0 ? squad : (TEAM_PLAYERS[myTeam] || getDefaultSquad(myTeam)))
 
     // Set up Champions League
     const groupAssignments = generateCLGroups(teams)
