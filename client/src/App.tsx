@@ -258,7 +258,13 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Tottenham': 110000000,
   'Newcastle': 120000000,
   'Aston Villa': 100000000,
+  'Atletico Madrid': 130000000,
+  'Athletic Bilbao': 70000000,
+  'Real Sociedad': 65000000,
+  'Villarreal': 60000000,
+  'Real Betis': 55000000,
 }
+
 
 
 const TEAM_OVRS: Record<string, number> = {
@@ -281,7 +287,13 @@ const TEAM_OVRS: Record<string, number> = {
   'Tottenham': 81,
   'Newcastle': 81,
   'Aston Villa': 79,
+  'Atletico Madrid': 84,
+  'Athletic Bilbao': 79,
+  'Real Sociedad': 78,
+  'Villarreal': 77,
+  'Real Betis': 77,
 }
+
 
 
 // AI teams to fill CL groups
