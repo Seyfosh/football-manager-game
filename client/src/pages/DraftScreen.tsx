@@ -24,6 +24,11 @@ const TEAMS = [
   { name: 'Real Sociedad', league: 'La Liga', ovr: 78, color: 'bg-blue-900' },
   { name: 'Villarreal', league: 'La Liga', ovr: 77, color: 'bg-yellow-500' },
   { name: 'Real Betis', league: 'La Liga', ovr: 77, color: 'bg-green-700' },
+  { name: 'Juventus', league: 'Serie A', ovr: 83, color: 'bg-gray-900' },
+  { name: 'Napoli', league: 'Serie A', ovr: 84, color: 'bg-blue-500' },
+  { name: 'Roma', league: 'Serie A', ovr: 81, color: 'bg-red-700' },
+  { name: 'Lazio', league: 'Serie A', ovr: 79, color: 'bg-sky-400' },
+  { name: 'Atalanta', league: 'Serie A', ovr: 80, color: 'bg-blue-800' },
 ]
 
 

@@ -263,7 +263,13 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Real Sociedad': 65000000,
   'Villarreal': 60000000,
   'Real Betis': 55000000,
+  'Juventus': 100000000,
+  'Napoli': 110000000,
+  'Roma': 80000000,
+  'Lazio': 60000000,
+  'Atalanta': 75000000,
 }
+
 
 
 
@@ -292,8 +298,12 @@ const TEAM_OVRS: Record<string, number> = {
   'Real Sociedad': 78,
   'Villarreal': 77,
   'Real Betis': 77,
+  'Juventus': 83,
+  'Napoli': 84,
+  'Roma': 81,
+  'Lazio': 79,
+  'Atalanta': 80,
 }
-
 
 
 // AI teams to fill CL groups
