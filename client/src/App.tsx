@@ -268,6 +268,11 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Roma': 80000000,
   'Lazio': 60000000,
   'Atalanta': 75000000,
+  'RB Leipzig': 90000000,
+  'Bayer Leverkusen': 100000000,
+  'Eintracht Frankfurt': 60000000,
+  'VfB Stuttgart': 55000000,
+  'Borussia Monchengladbach': 50000000,
 }
 
 
@@ -303,6 +308,11 @@ const TEAM_OVRS: Record<string, number> = {
   'Roma': 81,
   'Lazio': 79,
   'Atalanta': 80,
+  'RB Leipzig': 82,
+  'Bayer Leverkusen': 81,
+  'Eintracht Frankfurt': 79,
+  'VfB Stuttgart': 79,
+  'Borussia Monchengladbach': 78,
 }
 
 
