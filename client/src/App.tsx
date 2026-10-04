@@ -273,7 +273,13 @@ const TEAM_BUDGETS: Record<string, number> = {
   'Eintracht Frankfurt': 60000000,
   'VfB Stuttgart': 55000000,
   'Borussia Monchengladbach': 50000000,
+  'Lyon': 55000000,
+  'Lille': 60000000,
+  'Nice': 45000000,
+  'Lens': 50000000,
+  'Rennes': 45000000,
 }
+
 
 
 
@@ -313,7 +319,13 @@ const TEAM_OVRS: Record<string, number> = {
   'Eintracht Frankfurt': 79,
   'VfB Stuttgart': 79,
   'Borussia Monchengladbach': 78,
+  'Lyon': 79,
+  'Lille': 80,
+  'Nice': 77,
+  'Lens': 80,
+  'Rennes': 78,
 }
+
 
 
 // AI teams to fill CL groups
